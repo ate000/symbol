@@ -19,6 +19,7 @@ class MessageEncoder:
 		self.key_pair = key_pair
 
 	def _decode_aes_gcm(self, recipient_public_key, encoded_message):
+		# pylint: disable=duplicate-code
 		GCM_IV_SIZE = 12  # pylint: disable=invalid-name
 
 		tag = encoded_message[:AesGcmCipher.TAG_SIZE]

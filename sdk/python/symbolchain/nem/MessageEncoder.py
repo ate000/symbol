@@ -93,4 +93,4 @@ class MessageEncoder:
 		encoded_messsage = Message()
 		encoded_messsage.message_type = MessageType.ENCRYPTED
 		encoded_messsage.message = tag + initialization_vector + cipher_text[:tag_start_offset]
-		return message
+		return encoded_messsage
