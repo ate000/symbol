@@ -29,19 +29,19 @@ class MessageEncoderTests(BasicMessageEncoderTest, unittest.TestCase):
 	def test_recipient_can_decode_deprecated_encoded_message(self):
 		# Arrange:
 		key_pair = KeyPair(PrivateKey.random())
-		recipient = KeyPair(PrivateKey.random())
+		recipient_key_pair = KeyPair(PrivateKey.random())
 		encoder = MessageEncoder(key_pair)
-		encoded = encoder.encode_deprecated(recipient.public_key, b'hello world')
+		encoded = encoder.encode_deprecated(recipient_key_pair.public_key, b'hello world')
 
 		# Act:
-		decoder = MessageEncoder(recipient)
+		decoder = MessageEncoder(recipient_key_pair)
 		result, decoded = decoder.try_decode(key_pair.public_key, encoded)
 
 		# Assert:
 		self.assertTrue(result)
 		self.assertEqual(decoded, b'hello world')
 
-	def test_decode_falls_back_to_input_cbc_fallback_has_wrong_padding(self):
+	def test_decode_falls_back_to_input_when_cbc_has_wrong_padding(self):
 		# Arrange:
 		key_pair = KeyPair(PrivateKey.random())
 		recipient_public_key = KeyPair(PrivateKey.random()).public_key
@@ -58,7 +58,7 @@ class MessageEncoderTests(BasicMessageEncoderTest, unittest.TestCase):
 		self.assertFalse(result)
 		self.assertEqual(decoded, encoded)
 
-	def test_decode_throws_when(self):
+	def test_decode_throws_when_cbc_block_size_is_invalid(self):
 		# Arrange:
 		encoder = MessageEncoder(KeyPair(PrivateKey.random()))
 

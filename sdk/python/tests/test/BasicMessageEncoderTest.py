@@ -21,12 +21,12 @@ class BasicMessageEncoderTest:
 	def test_recipient_can_decode_encoded_message(self):
 		# Arrange:
 		key_pair = self.KeyPair(PrivateKey.random())
-		recipient = self.KeyPair(PrivateKey.random())
+		recipient_key_pair = self.KeyPair(PrivateKey.random())
 		encoder = self.MessageEncoder(key_pair)
-		encoded = encoder.encode(recipient.public_key, b'hello world')
+		encoded = encoder.encode(recipient_key_pair.public_key, b'hello world')
 
 		# Act:
-		decoder = self.MessageEncoder(recipient)
+		decoder = self.MessageEncoder(recipient_key_pair)
 		result, decoded = decoder.try_decode(key_pair.public_key, encoded)
 
 		# Assert:

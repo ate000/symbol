@@ -26,7 +26,7 @@ class MessageEncoderTests(BasicMessageEncoderTest, unittest.TestCase):
 
 		# Assert:
 		self.assertTrue(result)
-		self.assertEqual(decoded, remote_key_pair.private_key.bytes + vrf_key_pair.private_key.bytes)
+		self.assertEqual(remote_key_pair.private_key.bytes + vrf_key_pair.private_key.bytes, decoded)
 
 	def test_decode_falls_back_to_input_when_message_has_unknown_type(self):
 		# Arrange:

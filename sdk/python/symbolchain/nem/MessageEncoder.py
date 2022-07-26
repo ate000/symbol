@@ -12,28 +12,28 @@ from symbolchain.nem.SharedKey import SharedKey
 class MessageEncoder:
 	"""Encrypts and encodes messages between two parties."""
 
+	GCM_IV_SIZE = 12
+	CBC_IV_SIZE = 16
+	SALT_SIZE = 32
+
 	def __init__(self, key_pair: KeyPair):
 		"""Creates message encoder around key pair."""
 		self.key_pair = key_pair
 
 	def _decode_aes_gcm(self, recipient_public_key, encoded_message):
 		# pylint: disable=duplicate-code
-		GCM_IV_SIZE = 12  # pylint: disable=invalid-name
-
 		tag = encoded_message[:AesGcmCipher.TAG_SIZE]
-		initialization_vector = encoded_message[AesGcmCipher.TAG_SIZE:AesGcmCipher.TAG_SIZE + GCM_IV_SIZE]
-		encoded_message_data = encoded_message[AesGcmCipher.TAG_SIZE + GCM_IV_SIZE:]
+		initialization_vector = encoded_message[AesGcmCipher.TAG_SIZE:AesGcmCipher.TAG_SIZE + self.GCM_IV_SIZE]
+		encoded_message_data = encoded_message[AesGcmCipher.TAG_SIZE + self.GCM_IV_SIZE:]
 
 		shared_key = SharedKey.derive_shared_key(self.key_pair, recipient_public_key)
 		cipher = AesGcmCipher(shared_key)
 		return cipher.decrypt(encoded_message_data + tag, initialization_vector)
 
 	def _decode_aes_cbc(self, recipient_public_key, encoded_message):
-		CBC_IV_SIZE = 16  # pylint: disable=invalid-name
-
-		salt = encoded_message[:32]
-		initialization_vector = encoded_message[32:32 + CBC_IV_SIZE]
-		encoded_message_data = encoded_message[32 + CBC_IV_SIZE:]
+		salt = encoded_message[:self.SALT_SIZE]
+		initialization_vector = encoded_message[self.SALT_SIZE:self.SALT_SIZE + self.CBC_IV_SIZE]
+		encoded_message_data = encoded_message[self.SALT_SIZE + self.CBC_IV_SIZE:]
 		shared_key = SharedKey.derive_shared_key_deprecated(self.key_pair, recipient_public_key, salt)
 		cipher = AesCbcCipher(shared_key)
 		return cipher.decrypt(encoded_message_data, initialization_vector)
@@ -65,11 +65,11 @@ class MessageEncoder:
 	def encode_deprecated(self, recipient_public_key: PublicKey, message: bytes):
 		"""Encodes message to recipient using deprecated encryption and key derivation."""
 
-		salt = secrets.token_bytes(32)
+		salt = secrets.token_bytes(self.SALT_SIZE)
 		shared_key = SharedKey.derive_shared_key_deprecated(self.key_pair, recipient_public_key, salt)
 		cipher = AesCbcCipher(shared_key)
 
-		initialization_vector = secrets.token_bytes(16)
+		initialization_vector = secrets.token_bytes(self.CBC_IV_SIZE)
 		cipher_text = cipher.encrypt(message, initialization_vector)
 
 		encoded_messsage = Message()
@@ -84,7 +84,7 @@ class MessageEncoder:
 		shared_key = SharedKey.derive_shared_key(self.key_pair, recipient_public_key)
 		cipher = AesGcmCipher(shared_key)
 
-		initialization_vector = secrets.token_bytes(12)
+		initialization_vector = secrets.token_bytes(self.GCM_IV_SIZE)
 		cipher_text = cipher.encrypt(message, initialization_vector)
 
 		tag_start_offset = len(cipher_text) - AesGcmCipher.TAG_SIZE
