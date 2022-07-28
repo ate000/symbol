@@ -1,4 +1,9 @@
+from abc import abstractmethod
+from collections import namedtuple
+
 from symbolchain.CryptoTypes import PrivateKey
+
+MessageEncoderTestInterface = namedtuple('MessageEncoderTestInterface', ['key_pair_class', 'encoder_class', 'encode'])
 
 
 class BasicMessageEncoderTest:
@@ -6,10 +11,11 @@ class BasicMessageEncoderTest:
 
 	def test_sender_can_decode_encoded_message(self):
 		# Arrange:
-		key_pair = self.KeyPair(PrivateKey.random())
-		recipient_public_key = self.KeyPair(PrivateKey.random()).public_key
-		encoder = self.MessageEncoder(key_pair)
-		encoded = encoder.encode(recipient_public_key, b'hello world')
+		interface = self.get_basic_test_interface()
+		key_pair = interface.key_pair_class(PrivateKey.random())
+		recipient_public_key = interface.key_pair_class(PrivateKey.random()).public_key
+		encoder = interface.encoder_class(key_pair)
+		encoded = interface.encode(encoder)(recipient_public_key, b'hello world')
 
 		# Act:
 		result, decoded = encoder.try_decode(recipient_public_key, encoded)
@@ -20,15 +26,20 @@ class BasicMessageEncoderTest:
 
 	def test_recipient_can_decode_encoded_message(self):
 		# Arrange:
-		key_pair = self.KeyPair(PrivateKey.random())
-		recipient_key_pair = self.KeyPair(PrivateKey.random())
-		encoder = self.MessageEncoder(key_pair)
-		encoded = encoder.encode(recipient_key_pair.public_key, b'hello world')
+		interface = self.get_basic_test_interface()
+		key_pair = interface.key_pair_class(PrivateKey.random())
+		recipient_key_pair = interface.key_pair_class(PrivateKey.random())
+		encoder = interface.encoder_class(key_pair)
+		encoded = interface.encode(encoder)(recipient_key_pair.public_key, b'hello world')
 
 		# Act:
-		decoder = self.MessageEncoder(recipient_key_pair)
+		decoder = interface.encoder_class(recipient_key_pair)
 		result, decoded = decoder.try_decode(key_pair.public_key, encoded)
 
 		# Assert:
 		self.assertTrue(result)
 		self.assertEqual(decoded, b'hello world')
+
+	@abstractmethod
+	def get_basic_test_interface(self):
+		pass

@@ -5,41 +5,17 @@ from symbolchain.nc import Message, MessageType
 from symbolchain.nem.KeyPair import KeyPair
 from symbolchain.nem.MessageEncoder import MessageEncoder
 
-from ..test.BasicMessageEncoderTest import BasicMessageEncoderTest
+from ..test.BasicMessageEncoderTest import BasicMessageEncoderTest, MessageEncoderTestInterface
+
+
+class MessageEncoderDeprecatedTests(BasicMessageEncoderTest, unittest.TestCase):
+	def get_basic_test_interface(self):
+		return MessageEncoderTestInterface(KeyPair, MessageEncoder, lambda encoder: encoder.encode_deprecated)
 
 
 class MessageEncoderTests(BasicMessageEncoderTest, unittest.TestCase):
-	KeyPair = KeyPair
-	MessageEncoder = MessageEncoder
-
-	def test_sender_can_decode_deprecated_encoded_message(self):
-		# Arrange:
-		key_pair = KeyPair(PrivateKey.random())
-		recipient_public_key = KeyPair(PrivateKey.random()).public_key
-		encoder = MessageEncoder(key_pair)
-		encoded = encoder.encode_deprecated(recipient_public_key, b'hello world')
-
-		# Act:
-		result, decoded = encoder.try_decode(recipient_public_key, encoded)
-
-		# Assert:
-		self.assertTrue(result)
-		self.assertEqual(decoded, b'hello world')
-
-	def test_recipient_can_decode_deprecated_encoded_message(self):
-		# Arrange:
-		key_pair = KeyPair(PrivateKey.random())
-		recipient_key_pair = KeyPair(PrivateKey.random())
-		encoder = MessageEncoder(key_pair)
-		encoded = encoder.encode_deprecated(recipient_key_pair.public_key, b'hello world')
-
-		# Act:
-		decoder = MessageEncoder(recipient_key_pair)
-		result, decoded = decoder.try_decode(key_pair.public_key, encoded)
-
-		# Assert:
-		self.assertTrue(result)
-		self.assertEqual(decoded, b'hello world')
+	def get_basic_test_interface(self):
+		return MessageEncoderTestInterface(KeyPair, MessageEncoder, lambda encoder: encoder.encode)
 
 	def test_decode_falls_back_to_input_when_cbc_has_wrong_padding(self):
 		# Arrange:

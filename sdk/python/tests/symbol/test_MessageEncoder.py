@@ -4,12 +4,14 @@ from symbolchain.CryptoTypes import PrivateKey, PublicKey
 from symbolchain.symbol.KeyPair import KeyPair
 from symbolchain.symbol.MessageEncoder import MessageEncoder
 
-from ..test.BasicMessageEncoderTest import BasicMessageEncoderTest
+from ..test.BasicMessageEncoderTest import BasicMessageEncoderTest, MessageEncoderTestInterface
 
 
 class MessageEncoderTests(BasicMessageEncoderTest, unittest.TestCase):
-	KeyPair = KeyPair
-	MessageEncoder = MessageEncoder
+	def get_basic_test_interface(self):
+		return MessageEncoderTestInterface(KeyPair, MessageEncoder, lambda encoder: encoder.encode)
+
+	# note: there's no sender decode test for persistent harvesting delegation, cause sender does not have ephemeral key pair
 
 	def test_recipient_can_decode_encoded_persistent_harvesting_delegation(self):
 		# Arrange:
