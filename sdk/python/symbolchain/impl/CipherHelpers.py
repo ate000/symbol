@@ -7,10 +7,10 @@ CBC_IV_SIZE = 16
 SALT_SIZE = 32
 
 
-def _decode(tag_size, iv_size, encoded_message):
-	tag_or_salt = encoded_message[:tag_size]
-	initialization_vector = encoded_message[tag_size:tag_size + iv_size]
-	encoded_message_data = encoded_message[tag_size + iv_size:]
+def _decode(tag_or_salt_size, iv_size, encoded_message):
+	tag_or_salt = encoded_message[:tag_or_salt_size]
+	initialization_vector = encoded_message[tag_or_salt_size:tag_or_salt_size + iv_size]
+	encoded_message_data = encoded_message[tag_or_salt_size + iv_size:]
 
 	return tag_or_salt, initialization_vector, encoded_message_data
 
