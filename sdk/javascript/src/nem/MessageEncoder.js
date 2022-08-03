@@ -20,8 +20,8 @@ class MessageEncoder {
 	 * Tries to decode encoded message, returns tuple:
 	 *  * true, message - if message has been decoded and decrypted
 	 *  * false, encodedMessage - otherwise
-	 * @param {PublicKey} recipientPublicKey Recipient's public key.
-	 * @param {Uint8Array} encodedMessage Encoded message
+	 * @param {PublicKey} recipientPublicKey Recipient public key.
+	 * @param {Uint8Array} encodedMessage Encoded message.
 	 * @returns {array} Tuple containing decoded status and message.
 	 */
 	tryDecode(recipientPublicKey, encodedMessage) {

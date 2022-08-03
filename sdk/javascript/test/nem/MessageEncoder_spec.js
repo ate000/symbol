@@ -6,26 +6,23 @@ const { runBasicMessageEncoderTests } = require('../test/messageEncoderTests');
 const { expect } = require('chai');
 
 describe('MessageEncoder (NEM)', () => {
-	runBasicMessageEncoderTests({ KeyPair, MessageEncoder, encodeAccessor: encoder => encoder.encode.bind(encoder) });
+	runBasicMessageEncoderTests({
+		KeyPair,
+		MessageEncoder,
+		encodeAccessor: encoder => encoder.encode.bind(encoder)
+		// note: no malform test; right now tryDecode falls back to AesCbc,
+		// so malforming aesGcm encrypted message will fail gcm decryption, but when
+		// passed down to CBC fallback it will fail in some way that is not intercepted resulting in exception
+	});
 
-	runBasicMessageEncoderTests({ KeyPair, MessageEncoder, encodeAccessor: encoder => encoder.encodeDeprecated.bind(encoder) });
-
-	it('decode falls back to input when cbc has wrong padding', () => {
-		// Arrange:
-		const keyPair = new KeyPair(PrivateKey.random());
-		const recipientPublicKey = new KeyPair(PrivateKey.random()).publicKey;
-		const encoder = new MessageEncoder(keyPair);
-		const encoded = encoder.encodeDeprecated(recipientPublicKey, (new TextEncoder()).encode('hello world'));
-
-		encoded.message[encoded.message.length - 1] ^= 0xFF;
-
-		// Act:
-		const [result, decoded] = encoder.tryDecode(recipientPublicKey, encoded);
-
-		// Assert:
-		/* eslint-disable no-unused-expressions */
-		expect(result).to.be.false;
-		expect(decoded).to.deep.equal(encoded);
+	runBasicMessageEncoderTests({
+		name: 'deprecated',
+		KeyPair,
+		MessageEncoder,
+		encodeAccessor: encoder => encoder.encodeDeprecated.bind(encoder),
+		malformEncoded: encoded => {
+			encoded.message[encoded.message.length - 1] ^= 0xFF;
+		}
 	});
 
 	it('decode throws when cbc block size is invalid', () => {

@@ -27,9 +27,13 @@ class MessageEncoder {
 	 */
 	tryDecode(recipientPublicKey, encodedMessage) {
 		if (1 === encodedMessage[0]) {
-			// todo: catch InvalidTag exception...
-			const message = decodeAesGcm(deriveSharedKey, this.keyPair, recipientPublicKey, encodedMessage.subarray(1));
-			return [true, message];
+			try {
+				const message = decodeAesGcm(deriveSharedKey, this.keyPair, recipientPublicKey, encodedMessage.subarray(1));
+				return [true, message];
+			} catch (exception) {
+				if ('Unsupported state or unable to authenticate data' !== exception.message)
+					throw exception;
+			}
 		}
 
 		if (0xFE === encodedMessage[0]) {
@@ -56,10 +60,10 @@ class MessageEncoder {
 	}
 
 	/**
-	 * Encoded persistent harvesting delegation to node.
+	 * Encodes persistent harvesting delegation to node.
 	 * @param {PublicKey} nodePublicKey Node public key.
 	 * @param {KeyPair} remoteKeyPair Remote key pair.
-	 * @param {KeyPair} vrfRootKeyPair Vrf key pair.
+	 * @param {KeyPair} vrfRootKeyPair Vrf root key pair.
 	 * @returns {Uint8Array} Encrypted and encoded harvesting delegation request.
 	 */
 	// eslint-disable-next-line class-methods-use-this

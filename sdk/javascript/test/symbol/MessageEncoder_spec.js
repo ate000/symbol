@@ -6,7 +6,14 @@ const { runBasicMessageEncoderTests } = require('../test/messageEncoderTests');
 const { expect } = require('chai');
 
 describe('MessageEncoder (Symbol)', () => {
-	runBasicMessageEncoderTests({ KeyPair, MessageEncoder, encodeAccessor: encoder => encoder.encode.bind(encoder) });
+	runBasicMessageEncoderTests({
+		KeyPair,
+		MessageEncoder,
+		encodeAccessor: encoder => encoder.encode.bind(encoder),
+		malformEncoded: encoded => {
+			encoded[encoded.length - 1] ^= 0xFF;
+		}
+	});
 
 	// note: there's no sender decode test for persistent harvesting delegation, cause sender does not have ephemeral key pair
 	it('recipient can decode encoded persistent harvesting delegation', () => {
@@ -23,8 +30,7 @@ describe('MessageEncoder (Symbol)', () => {
 		const [result, decoded] = decoder.tryDecode(keyPair.publicKey, encoded);
 
 		// Assert:
-		/* eslint-disable no-unused-expressions */
-		expect(result).to.be.true;
+		expect(result).to.equal(true);
 		expect(decoded).to.deep.equal(concatArrays(remoteKeyPair.privateKey.bytes, vrfKeyPair.privateKey.bytes));
 	});
 
@@ -37,7 +43,7 @@ describe('MessageEncoder (Symbol)', () => {
 		const [result, decoded] = encoder.tryDecode(new PublicKey(new Uint8Array(32)), invalidEncoded);
 
 		// Assert:
-		expect(result).to.be.false;
+		expect(result).to.equal(false);
 		expect(decoded).to.deep.equal(invalidEncoded);
 	});
 });

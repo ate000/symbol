@@ -2,7 +2,9 @@ const { PrivateKey } = require('../../src/CryptoTypes');
 const { expect } = require('chai');
 
 const runBasicMessageEncoderTests = testDescriptor => {
-	it('sender can decode encoded message', () => {
+	const testSuffix = testDescriptor.name ? ` (${testDescriptor.name})` : '';
+
+	it(`sender can decode encoded message${testSuffix}`, () => {
 		// Arrange:
 		const keyPair = new testDescriptor.KeyPair(PrivateKey.random());
 		const recipientPublicKey = new testDescriptor.KeyPair(PrivateKey.random()).publicKey;
@@ -13,12 +15,11 @@ const runBasicMessageEncoderTests = testDescriptor => {
 		const [result, decoded] = encoder.tryDecode(recipientPublicKey, encoded);
 
 		// Assert:
-		/* eslint-disable no-unused-expressions */
-		expect(result).to.be.true;
+		expect(result).to.equal(true);
 		expect(decoded).to.deep.equal((new TextEncoder()).encode('hello world'));
 	});
 
-	it('recipient can decode encoded message', () => {
+	it(`recipient can decode encoded message${testSuffix}`, () => {
 		// Arrange:
 		const keyPair = new testDescriptor.KeyPair(PrivateKey.random());
 		const recipientKeyPair = new testDescriptor.KeyPair(PrivateKey.random());
@@ -30,9 +31,28 @@ const runBasicMessageEncoderTests = testDescriptor => {
 		const [result, decoded] = decoder.tryDecode(keyPair.publicKey, encoded);
 
 		// Assert:
-		/* eslint-disable no-unused-expressions */
-		expect(result).to.be.true;
+		expect(result).to.equal(true);
 		expect(decoded).to.deep.equal((new TextEncoder()).encode('hello world'));
+	});
+
+	if (!testDescriptor.malformEncoded)
+		return;
+
+	it(`decode falls back to input when decoding failed${testSuffix}`, () => {
+		// Arrange:
+		const keyPair = new testDescriptor.KeyPair(PrivateKey.random());
+		const recipientPublicKey = new testDescriptor.KeyPair(PrivateKey.random()).publicKey;
+		const encoder = new testDescriptor.MessageEncoder(keyPair);
+		const encoded = testDescriptor.encodeAccessor(encoder)(recipientPublicKey, (new TextEncoder()).encode('hello world'));
+
+		testDescriptor.malformEncoded(encoded);
+
+		// Act:
+		const [result, decoded] = encoder.tryDecode(recipientPublicKey, encoded);
+
+		// Assert:
+		expect(result).to.equal(false);
+		expect(decoded).to.deep.equal(encoded);
 	});
 };
 
