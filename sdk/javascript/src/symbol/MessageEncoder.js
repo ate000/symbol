@@ -5,6 +5,18 @@ const { concatArrays, decodeAesGcm, encodeAesGcm } = require('../impl/CipherHelp
 
 const DELEGATION_MARKER = Uint8Array.from(Buffer.from('FE2A8061577301E2', 'hex'));
 
+const filterException = statement => {
+	try {
+		const message = statement();
+		return [true, message];
+	} catch (exception) {
+		if ('Unsupported state or unable to authenticate data' !== exception.message)
+			throw exception;
+	}
+
+	return [false, false];
+};
+
 /**
  * Encrypts and encodes messages between two parties.
  */
@@ -27,21 +39,22 @@ class MessageEncoder {
 	 */
 	tryDecode(recipientPublicKey, encodedMessage) {
 		if (1 === encodedMessage[0]) {
-			try {
-				const message = decodeAesGcm(deriveSharedKey, this.keyPair, recipientPublicKey, encodedMessage.subarray(1));
+			const [result, message] = filterException(
+				() => decodeAesGcm(deriveSharedKey, this.keyPair, recipientPublicKey, encodedMessage.subarray(1)));
+			if (result)
 				return [true, message];
-			} catch (exception) {
-				if ('Unsupported state or unable to authenticate data' !== exception.message)
-					throw exception;
-			}
 		}
 
 		if (0xFE === encodedMessage[0]) {
 			const ephemeralPublicKeyStart = DELEGATION_MARKER.length;
 			const ephemeralPublicKeyEnd = ephemeralPublicKeyStart + PublicKey.SIZE;
 			const ephemeralPublicKey = new PublicKey(encodedMessage.subarray(ephemeralPublicKeyStart, ephemeralPublicKeyEnd));
-			const message = decodeAesGcm(deriveSharedKey, this.keyPair, ephemeralPublicKey, encodedMessage.subarray(ephemeralPublicKeyEnd));
-			return [true, message];
+
+
+			const [result, message] = filterException(
+				() => decodeAesGcm(deriveSharedKey, this.keyPair, ephemeralPublicKey, encodedMessage.subarray(ephemeralPublicKeyEnd)));
+			if (result)
+				return [true, message];
 		}
 
 		return [false, encodedMessage];

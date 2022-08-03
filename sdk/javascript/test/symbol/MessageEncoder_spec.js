@@ -2,7 +2,7 @@ const { PrivateKey, PublicKey } = require('../../src/CryptoTypes');
 const { concatArrays } = require('../../src/impl/CipherHelpers');
 const { KeyPair } = require('../../src/symbol/KeyPair');
 const { MessageEncoder } = require('../../src/symbol/MessageEncoder');
-const { runBasicMessageEncoderTests } = require('../test/messageEncoderTests');
+const { runBasicMessageEncoderTests, runMessageEncoderDecodeFailureTests } = require('../test/messageEncoderTests');
 const { expect } = require('chai');
 
 describe('MessageEncoder (Symbol)', () => {
@@ -10,6 +10,20 @@ describe('MessageEncoder (Symbol)', () => {
 		KeyPair,
 		MessageEncoder,
 		encodeAccessor: encoder => encoder.encode.bind(encoder),
+		malformEncoded: encoded => {
+			encoded[encoded.length - 1] ^= 0xFF;
+		}
+	});
+
+	runMessageEncoderDecodeFailureTests({
+		name: 'fake delegation',
+		KeyPair,
+		MessageEncoder,
+		encodeAccessor: encoder => (publicKey, message) => {
+			const result = encoder.encode(publicKey, message);
+			const fakeMarker = Uint8Array.from(Buffer.from('FEAAAAAA55555555', 'hex'));
+			return concatArrays(fakeMarker, publicKey.bytes, result.subarray(1));
+		},
 		malformEncoded: encoded => {
 			encoded[encoded.length - 1] ^= 0xFF;
 		}

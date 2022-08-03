@@ -1,7 +1,7 @@
 const { PrivateKey } = require('../../src/CryptoTypes');
 const { expect } = require('chai');
 
-const runBasicMessageEncoderTests = testDescriptor => {
+const runMessageEncoderDecodeSuccessTests = testDescriptor => {
 	const testSuffix = testDescriptor.name ? ` (${testDescriptor.name})` : '';
 
 	it(`sender can decode encoded message${testSuffix}`, () => {
@@ -34,16 +34,17 @@ const runBasicMessageEncoderTests = testDescriptor => {
 		expect(result).to.equal(true);
 		expect(decoded).to.deep.equal((new TextEncoder()).encode('hello world'));
 	});
+};
 
-	if (!testDescriptor.malformEncoded)
-		return;
+const runMessageEncoderDecodeFailureTests = testDescriptor => {
+	const testSuffix = testDescriptor.name ? ` (${testDescriptor.name})` : '';
 
-	it(`decode falls back to input when decoding failed${testSuffix}`, () => {
+	const runDecodeFailureTest = message => {
 		// Arrange:
 		const keyPair = new testDescriptor.KeyPair(PrivateKey.random());
 		const recipientPublicKey = new testDescriptor.KeyPair(PrivateKey.random()).publicKey;
 		const encoder = new testDescriptor.MessageEncoder(keyPair);
-		const encoded = testDescriptor.encodeAccessor(encoder)(recipientPublicKey, (new TextEncoder()).encode('hello world'));
+		const encoded = testDescriptor.encodeAccessor(encoder)(recipientPublicKey, (new TextEncoder()).encode(message));
 
 		testDescriptor.malformEncoded(encoded);
 
@@ -53,7 +54,19 @@ const runBasicMessageEncoderTests = testDescriptor => {
 		// Assert:
 		expect(result).to.equal(false);
 		expect(decoded).to.deep.equal(encoded);
+	};
+
+	it(`decode falls back to input when decoding failed - short${testSuffix}`, () => {
+		runDecodeFailureTest('hello world');
+	});
+	it(`decode falls back to input when decoding failed - long${testSuffix}`, () => {
+		runDecodeFailureTest('bit longer message that should span upon multiple encryption blocks');
 	});
 };
 
-module.exports = { runBasicMessageEncoderTests };
+const runBasicMessageEncoderTests = testDescriptor => {
+	runMessageEncoderDecodeSuccessTests(testDescriptor);
+	runMessageEncoderDecodeFailureTests(testDescriptor);
+};
+
+module.exports = { runBasicMessageEncoderTests, runMessageEncoderDecodeFailureTests };

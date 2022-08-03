@@ -40,7 +40,9 @@ class MessageEncoder {
 			const message = decodeAesCbc(deriveSharedKeyDeprecated, this.keyPair, recipientPublicKey, encodedMessage.message);
 			return [true, message];
 		} catch (exception) {
-			if (!exception.message.includes('digital envelope routines:EVP_DecryptFinal_ex:bad decrypt'))
+			if (!exception.message.includes('digital envelope routines:EVP_DecryptFinal_ex:bad decrypt')
+				&& !exception.message.includes('digital envelope routines:EVP_DecryptFinal_ex:wrong final block length')
+				&& !exception.message.includes('Invalid initialization vector'))
 				throw exception;
 		}
 

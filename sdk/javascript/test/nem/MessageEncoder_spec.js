@@ -9,10 +9,10 @@ describe('MessageEncoder (NEM)', () => {
 	runBasicMessageEncoderTests({
 		KeyPair,
 		MessageEncoder,
-		encodeAccessor: encoder => encoder.encode.bind(encoder)
-		// note: no malform test; right now tryDecode falls back to AesCbc,
-		// so malforming aesGcm encrypted message will fail gcm decryption, but when
-		// passed down to CBC fallback it will fail in some way that is not intercepted resulting in exception
+		encodeAccessor: encoder => encoder.encode.bind(encoder),
+		malformEncoded: encoded => {
+			encoded.message[encoded.message.length - 20] ^= 0xFF;
+		}
 	});
 
 	runBasicMessageEncoderTests({
