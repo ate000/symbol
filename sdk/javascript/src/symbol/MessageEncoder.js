@@ -2,6 +2,7 @@ const { KeyPair } = require('./KeyPair');
 const { deriveSharedKey } = require('./SharedKey');
 const { PrivateKey, PublicKey } = require('../CryptoTypes');
 const { concatArrays, decodeAesGcm, encodeAesGcm } = require('../impl/CipherHelpers');
+const { deepCompare } = require('../utils/arrayHelpers');
 
 const DELEGATION_MARKER = Uint8Array.from(Buffer.from('FE2A8061577301E2', 'hex'));
 
@@ -47,7 +48,7 @@ class MessageEncoder {
 				return [true, message];
 		}
 
-		if (0xFE === encodedMessage[0]) {
+		if (0xFE === encodedMessage[0] && 0 === deepCompare(DELEGATION_MARKER, encodedMessage.slice(0, 8))) {
 			const ephemeralPublicKeyStart = DELEGATION_MARKER.length;
 			const ephemeralPublicKeyEnd = ephemeralPublicKeyStart + PublicKey.SIZE;
 			const ephemeralPublicKey = new PublicKey(encodedMessage.subarray(ephemeralPublicKeyStart, ephemeralPublicKeyEnd));

@@ -21,7 +21,7 @@ describe('MessageEncoder (Symbol)', () => {
 		MessageEncoder,
 		encodeAccessor: encoder => (publicKey, message) => {
 			const result = encoder.encode(publicKey, message);
-			const fakeMarker = Uint8Array.from(Buffer.from('FEAAAAAA55555555', 'hex'));
+			const fakeMarker = Uint8Array.from(Buffer.from('FE2A8061577301E2', 'hex'));
 			return concatArrays(fakeMarker, publicKey.bytes, result.subarray(1));
 		},
 		malformEncoded: encoded => {
