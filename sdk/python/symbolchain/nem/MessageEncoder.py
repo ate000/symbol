@@ -33,7 +33,11 @@ class MessageEncoder:
 			message = decode_aes_cbc(SharedKey, self.key_pair, recipient_public_key, encoded_message.message)
 			return True, message
 		except ValueError as exception:
-			if 'Invalid padding bytes' not in str(exception):
+			exceptions = [
+				'Invalid padding bytes',
+				'Invalid IV size',
+				'The length of the provided data is not a multiple of the block length']
+			if not any(map(lambda message: message in str(exception), exceptions)):
 				raise
 
 		return False, encoded_message

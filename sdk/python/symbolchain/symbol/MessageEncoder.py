@@ -35,6 +35,10 @@ class MessageEncoder:
 				return True, message
 			except cryptography.exceptions.InvalidTag:
 				pass
+			except ValueError as exception:
+				exceptions = ['point is not in main subgroup']
+				if not any(map(lambda message: message in str(exception), exceptions)):
+					raise
 
 		return False, encoded_message
 
