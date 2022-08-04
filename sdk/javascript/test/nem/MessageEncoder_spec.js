@@ -25,17 +25,21 @@ describe('MessageEncoder (NEM)', () => {
 		}
 	});
 
-	it('decode throws when cbc block size is invalid', () => {
+	it('decode falls back to input when cbc block size is invalid', () => {
 		// Arrange:
 		const encoder = new MessageEncoder(new KeyPair(PrivateKey.random()));
+		const recipientPublicKey = new KeyPair(PrivateKey.random()).publicKey;
 
 		const encodedMessage = new Message();
 		encodedMessage.messageType = MessageType.ENCRYPTED;
 		encodedMessage.message = new Uint8Array(16 + 32 + 1);
 
-		// Act + Assert:
-		expect(() => { encoder.tryDecode(new PublicKey(new Uint8Array(PublicKey.SIZE)), encodedMessage); })
-			.to.throw('invalid point');
+		// Act:
+		const [result, decoded] = encoder.tryDecode(recipientPublicKey, encodedMessage);
+
+		// Assert:
+		expect(result).to.equal(false);
+		expect(decoded).to.deep.equal(encodedMessage);
 	});
 
 	it('decode throws when message type is invalid', () => {

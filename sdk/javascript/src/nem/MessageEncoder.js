@@ -4,6 +4,18 @@ const {
 	concatArrays, decodeAesGcm, encodeAesGcm, encodeAesCbc, decodeAesCbc
 } = require('../impl/CipherHelpers');
 
+const filterExceptions = (statement, exceptions) => {
+	try {
+		const message = statement();
+		return [true, message];
+	} catch (exception) {
+		if (!exceptions.some(exceptionMessage => exception.message.includes(exceptionMessage)))
+			throw exception;
+	}
+
+	return [false, false];
+};
+
 /**
  * Encrypts and encodes messages between two parties.
  */
@@ -28,23 +40,23 @@ class MessageEncoder {
 		if (MessageType.ENCRYPTED !== encodedMessage.messageType)
 			throw new Error('invalid message format');
 
-		try {
-			const message = decodeAesGcm(deriveSharedKey, this.keyPair, recipientPublicKey, encodedMessage.message);
+		let [result, message] = filterExceptions(
+			() => decodeAesGcm(deriveSharedKey, this.keyPair, recipientPublicKey, encodedMessage.message),
+			['Unsupported state or unable to authenticate data']
+		);
+		if (result)
 			return [true, message];
-		} catch (exception) {
-			if ('Unsupported state or unable to authenticate data' !== exception.message)
-				throw exception;
-		}
 
-		try {
-			const message = decodeAesCbc(deriveSharedKeyDeprecated, this.keyPair, recipientPublicKey, encodedMessage.message);
+		[result, message] = filterExceptions(
+			() => decodeAesCbc(deriveSharedKeyDeprecated, this.keyPair, recipientPublicKey, encodedMessage.message),
+			[
+				'digital envelope routines:EVP_DecryptFinal_ex:bad decrypt',
+				'digital envelope routines:EVP_DecryptFinal_ex:wrong final block length',
+				'Invalid initialization vector'
+			]
+		);
+		if (result)
 			return [true, message];
-		} catch (exception) {
-			if (!exception.message.includes('digital envelope routines:EVP_DecryptFinal_ex:bad decrypt')
-				&& !exception.message.includes('digital envelope routines:EVP_DecryptFinal_ex:wrong final block length')
-				&& !exception.message.includes('Invalid initialization vector'))
-				throw exception;
-		}
 
 		return [false, encodedMessage];
 	}

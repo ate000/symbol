@@ -48,6 +48,28 @@ describe('MessageEncoder (Symbol)', () => {
 		expect(decoded).to.deep.equal(concatArrays(remoteKeyPair.privateKey.bytes, vrfKeyPair.privateKey.bytes));
 	});
 
+	it('decode falls back to input when ephemeral public key is not valid', () => {
+		// Arrange: create valid persistent harvesting delegation request
+		const keyPair = new KeyPair(PrivateKey.random());
+		const nodeKeyPair = new KeyPair(PrivateKey.random());
+		const remoteKeyPair = new KeyPair(PrivateKey.random());
+		const vrfKeyPair = new KeyPair(PrivateKey.random());
+		const encoder = new MessageEncoder(keyPair);
+		const encoded = encoder.encodePersistentHarvestingDelegation(nodeKeyPair.publicKey, remoteKeyPair, vrfKeyPair);
+
+		// - zero public key
+		for (let i = 8; i < 8 + 32; ++i)
+			encoded[i] = 0;
+
+		// Act:
+		const decoder = new MessageEncoder(nodeKeyPair);
+		const [result, decoded] = decoder.tryDecode(keyPair.publicKey, encoded);
+
+		// Assert:
+		expect(result).to.equal(false);
+		expect(decoded).to.deep.equal(encoded);
+	});
+
 	it('decode falls back to input when message has unknown type', () => {
 		// Arrange:
 		const encoder = new MessageEncoder(new KeyPair(PrivateKey.random()));
