@@ -13,7 +13,7 @@ const filterExceptions = (statement, exceptions) => {
 			throw exception;
 	}
 
-	return [false, false];
+	return [false, undefined];
 };
 
 /**

@@ -82,13 +82,13 @@ class MessageEncoder {
 	 * Encodes persistent harvesting delegation to node.
 	 * @param {PublicKey} nodePublicKey Node public key.
 	 * @param {KeyPair} remoteKeyPair Remote key pair.
-	 * @param {KeyPair} vrfRootKeyPair Vrf root key pair.
+	 * @param {KeyPair} vrfKeyPair Vrf key pair.
 	 * @returns {Uint8Array} Encrypted and encoded harvesting delegation request.
 	 */
 	// eslint-disable-next-line class-methods-use-this
-	encodePersistentHarvestingDelegation(nodePublicKey, remoteKeyPair, vrfRootKeyPair) {
+	encodePersistentHarvestingDelegation(nodePublicKey, remoteKeyPair, vrfKeyPair) {
 		const ephemeralKeyPair = new KeyPair(PrivateKey.random());
-		const message = concatArrays(remoteKeyPair.privateKey.bytes, vrfRootKeyPair.privateKey.bytes);
+		const message = concatArrays(remoteKeyPair.privateKey.bytes, vrfKeyPair.privateKey.bytes);
 		const { tag, initializationVector, cipherText } = encodeAesGcm(deriveSharedKey, ephemeralKeyPair, nodePublicKey, message);
 
 		return concatArrays(DELEGATION_MARKER, ephemeralKeyPair.publicKey.bytes, tag, initializationVector, cipherText);
